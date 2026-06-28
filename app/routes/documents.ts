@@ -63,16 +63,20 @@ router.get('/', async (_req, res) => {
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
-  await qdrant.delete(COLLECTION_NAME, {
-    filter: {
-      must: [{ key: 'documentId', match: { value: id } }],
-    },
-  });
+  try {
+    await qdrant.delete(COLLECTION_NAME, {
+      filter: {
+        must: [{ key: 'documentId', match: { value: id } }],
+      },
+    });
 
-  const { error } = await supabase.from('documents').delete().eq('id', id);
-  if (error) return res.status(500).json({ error: error.message });
+    const { error } = await supabase.from('documents').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
 
-  res.status(204).send();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 export default router;
