@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import { processDocument } from '../services/document_processor.js';
 import { supabase } from '../db/supabase.js';
 import { qdrant, COLLECTION_NAME } from '../db/qdrant.js';
+import * as repo from '../db/repositories.js';
+import { optionalAuth } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -26,7 +28,7 @@ const upload = multer({
 });
 
 // POST /api/documents/upload
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', optionalAuth, upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Dosya gerekli' });
   }
@@ -37,7 +39,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       req.file.originalname,
       req.file.mimetype,
       req.file.size,
-      (req as any).auth?.userId ?? 'anonymous'
+      req.auth?.userId ?? 'anonymous'
     );
 
     await fs.unlink(req.file.path).catch(() => {});
@@ -49,18 +51,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 // GET /api/documents
-router.get('/', async (_req, res) => {
-  const { data, error } = await supabase
-    .from('documents')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+router.get('/', optionalAuth, async (_req, res) => {
+  try {
+    const documents = await repo.listDocuments();
+    res.json(documents);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // DELETE /api/documents/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', optionalAuth, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -70,9 +71,7 @@ router.delete('/:id', async (req, res) => {
       },
     });
 
-    const { error } = await supabase.from('documents').delete().eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-
+    await repo.deleteDocument(id);
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });

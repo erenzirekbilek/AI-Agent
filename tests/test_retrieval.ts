@@ -1,5 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { chunkText } from '../app/services/chunker.js';
+
+vi.mock('../app/services/embedding.js', () => ({
+  embedText: vi.fn().mockResolvedValue(new Array(1024).fill(0.1)),
+}));
+
+vi.mock('../app/db/qdrant.js', () => ({
+  qdrant: {
+    search: vi.fn().mockResolvedValue([
+      {
+        score: 0.92,
+        payload: {
+          documentId: 'doc-1',
+          documentName: 'test.pdf',
+          chunkIndex: 0,
+          content: 'Test içerik',
+        },
+      },
+    ]),
+  },
+  COLLECTION_NAME: 'documents',
+}));
 
 describe('chunkText', () => {
   it('kısa metni tek chunk yapar', () => {
@@ -30,5 +51,20 @@ describe('chunkText', () => {
   it('overlap >= maxTokens durumunda hata fırlatır', () => {
     expect(() => chunkText('some text here and more', 5, 5)).toThrow();
     expect(() => chunkText('some text here and more', 3, 10)).toThrow();
+  });
+});
+
+describe('retrieveChunks', () => {
+  it('query için top-k chunk döner', async () => {
+    const { retrieveChunks } = await import('../app/services/retrieval.js');
+    const results = await retrieveChunks('test sorgu', 1);
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      documentId: 'doc-1',
+      documentName: 'test.pdf',
+      chunkIndex: 0,
+      content: 'Test içerik',
+      score: 0.92,
+    });
   });
 });
