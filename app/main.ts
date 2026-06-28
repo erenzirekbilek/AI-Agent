@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config.js';
 import { ensureCollection } from './db/qdrant.js';
+import documentsRouter from './routes/documents.js';
 
 const app = express();
 
@@ -11,6 +12,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+app.use('/api/documents', documentsRouter);
 
 ensureCollection().catch(console.error);
 
