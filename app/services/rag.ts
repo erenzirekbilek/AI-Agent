@@ -37,7 +37,7 @@ export async function runRag(options: RagOptions): Promise<RagResult> {
   const context = sources.map((s, i) => `[${i + 1}] ${s.excerpt}`).join('\n\n');
 
   const stream = await groq.chat.completions.create({
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: `Bağlam:\n${context}\n\nSoru: ${message}` },

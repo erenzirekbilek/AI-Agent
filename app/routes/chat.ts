@@ -73,12 +73,11 @@ router.post('/', requireAuth, async (req, res) => {
     res.end();
   } catch (err) {
     console.error('Chat error:', err);
-    // If headers already sent, try to send error event
-    try {
-      res.write(`data: ${JSON.stringify({ type: 'error', error: (err as Error).message })}\n\n`);
-      res.end();
-    } catch {
-      res.status(500).json({ error: (err as Error).message });
+    const msg = (err as Error).message;
+    if (res.headersSent) {
+      try { res.write(`data: ${JSON.stringify({ type: 'error', error: msg })}\n\n`); res.end(); } catch {}
+    } else {
+      res.status(500).json({ error: msg });
     }
   }
 });

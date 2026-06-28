@@ -42,7 +42,7 @@ app.get('/health', async (_req, res) => {
   try {
     const groq = new Groq({ apiKey: config.GROQ_API_KEY });
     await groq.chat.completions.create({
-      model: 'llama3-70b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: 'ping' }],
       max_tokens: 1,
     });

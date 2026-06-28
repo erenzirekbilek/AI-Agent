@@ -94,7 +94,10 @@ export function streamChat(
       });
 
       if (!res.ok || !res.body) {
-        onError('Sunucu hatası');
+        const body = await res.text().catch(() => '');
+        let msg = 'Sunucu hatası';
+        try { const j = JSON.parse(body); if (j.error) msg = j.error; } catch {}
+        onError(msg);
         return;
       }
 

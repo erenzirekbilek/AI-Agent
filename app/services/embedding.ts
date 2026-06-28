@@ -1,22 +1,28 @@
-import { HfInference } from '@huggingface/inference';
-import { config } from '../config.js';
+import { pipeline } from '@xenova/transformers';
 
-const hf = new HfInference(config.HUGGINGFACE_API_KEY);
-const MODEL = 'BAAI/bge-m3';
+let extractor: any = null;
+
+async function getExtractor() {
+  if (!extractor) {
+    extractor = await pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5');
+  }
+  return extractor;
+}
 
 export async function embedText(text: string): Promise<number[]> {
-  const result = await hf.featureExtraction({
-    model: MODEL,
-    inputs: text,
-  });
-  const embedding = Array.isArray(result[0]) ? (result as number[][])[0] : (result as number[]);
-  return embedding;
+  const extract = await getExtractor();
+  const result = await extract(text, { pooling: 'mean', normalize: true });
+  return Array.from(result.data);
 }
 
 export async function embedBatch(texts: string[]): Promise<number[][]> {
+  const extract = await getExtractor();
+  const result = await extract(texts, { pooling: 'mean', normalize: true });
+  const arr = Array.from(result.data) as number[];
+  const dim = 384;
   const embeddings: number[][] = [];
-  for (const text of texts) {
-    embeddings.push(await embedText(text));
+  for (let i = 0; i < arr.length; i += dim) {
+    embeddings.push(arr.slice(i, i + dim));
   }
   return embeddings;
 }

@@ -7,19 +7,31 @@ export const qdrant = new QdrantClient({
 });
 
 export const COLLECTION_NAME = 'documents';
-export const VECTOR_SIZE = 1024; // BAAI/bge-m3
+export const VECTOR_SIZE = 384; // Xenova/bge-small-en-v1.5
 
 export async function ensureCollection(): Promise<void> {
   const collections = await qdrant.getCollections();
-  const exists = collections.collections.some(c => c.name === COLLECTION_NAME);
+  const col = collections.collections.find(c => c.name === COLLECTION_NAME);
+  const requiredSize = VECTOR_SIZE;
 
-  if (!exists) {
+  if (!col) {
     await qdrant.createCollection(COLLECTION_NAME, {
       vectors: {
-        size: VECTOR_SIZE,
+        size: requiredSize,
         distance: 'Cosine',
       },
     });
-    console.log(`✅ Qdrant collection '${COLLECTION_NAME}' oluşturuldu`);
+    console.log(`✅ Qdrant collection '${COLLECTION_NAME}' (${requiredSize}dim) oluşturuldu`);
+    return;
+  }
+
+  const currentSize = (col as any).config?.params?.vectors?.size;
+  if (currentSize && currentSize !== requiredSize) {
+    console.warn(`⚠️ Qdrant collection '${COLLECTION_NAME}' (${currentSize}dim) eski, ${requiredSize}dim olarak yeniden oluşturuluyor...`);
+    await qdrant.deleteCollection(COLLECTION_NAME);
+    await qdrant.createCollection(COLLECTION_NAME, {
+      vectors: { size: requiredSize, distance: 'Cosine' },
+    });
+    console.log(`✅ Qdrant collection '${COLLECTION_NAME}' (${requiredSize}dim) yeniden oluşturuldu`);
   }
 }

@@ -2,7 +2,11 @@
   "name": "production-ai-app",
   "private": true,
   "packageManager": "npm@11.11.0",
-  "workspaces": ["app", "frontend", "packages/*"],
+  "workspaces": [
+    "app",
+    "frontend",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -12,11 +16,15 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "chokidar": "^3.6.0",
     "husky": "^9.0.0",
     "lint-staged": "^15.2.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.4.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "pg": "^8.22.0",
+    "sharp": "^0.33.4"
   }
 }
