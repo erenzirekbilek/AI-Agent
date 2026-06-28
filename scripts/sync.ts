@@ -15,7 +15,9 @@ const MIME_MAP: Record<string, string> = {
 await ensureCollection();
 console.log(`👀 İzleniyor: ${WATCH_DIR}`);
 
-chokidar.watch(WATCH_DIR, { ignoreInitial: false }).on('add', async (filePath) => {
+chokidar.watch(WATCH_DIR, { ignoreInitial: false })
+  .on('error', (err) => console.error('❌ Watcher hatası:', err))
+  .on('add', async (filePath) => {
   const ext = path.extname(filePath).toLowerCase();
   const mimeType = MIME_MAP[ext];
   if (!mimeType) return;
@@ -35,4 +37,4 @@ chokidar.watch(WATCH_DIR, { ignoreInitial: false }).on('add', async (filePath) =
   } catch (err) {
     console.error(`❌ İşlenemedi: ${filePath}`, (err as Error).message);
   }
-});
+  });
