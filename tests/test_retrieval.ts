@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { chunkText } from '../services/chunker.js';
+import { chunkText } from '../app/services/chunker.js';
 
 describe('chunkText', () => {
   it('kısa metni tek chunk yapar', () => {
