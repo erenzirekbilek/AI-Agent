@@ -2,6 +2,10 @@ export function chunkText(text: string, maxTokens: number, overlap: number): str
   const trimmed = text.trim();
   if (!trimmed) return [];
 
+  if (overlap >= maxTokens) {
+    throw new Error(`overlap (${overlap}) must be less than maxTokens (${maxTokens})`);
+  }
+
   const words = trimmed.split(/\s+/);
   if (words.length <= maxTokens) return [trimmed];
 

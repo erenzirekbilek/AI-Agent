@@ -26,4 +26,9 @@ describe('chunkText', () => {
   it('boş metni boş array döner', () => {
     expect(chunkText('', 512, 50)).toEqual([]);
   });
+
+  it('overlap >= maxTokens durumunda hata fırlatır', () => {
+    expect(() => chunkText('some text here and more', 5, 5)).toThrow();
+    expect(() => chunkText('some text here and more', 3, 10)).toThrow();
+  });
 });
